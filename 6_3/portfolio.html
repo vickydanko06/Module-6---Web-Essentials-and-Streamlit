@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!--
+  L2 — Semantic Portfolio Page  (STARTER)
+  =========================================
+  Your goal: build a personal portfolio page using HTML5 semantic elements.
+
+  Semantic elements to use:
+    <header>   — site-wide header (name, nav)
+    <nav>      — navigation links
+    <main>     — primary page content
+    <section>  — a thematic group with a heading
+    <article>  — self-contained content (use for each project)
+    <footer>   — closing info (copyright)
+
+  No CSS needed — focus on structure and meaning.
+
+  Remember:
+    • Every <img> MUST have an alt attribute.
+      If the image is decorative, use alt=""
+      If it conveys information, describe the image in alt.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css">
+  <!-- TODO: Update the <title> with your own name -->
+  <title>Vicky Danko — Portfolio</title>
+</head>
+<body>
+
+  <!-- TODO: Add a <header> containing:
+       - An <h1> with your name
+       - A short tagline in a <p>
+       - A <nav> with links to: #about, #projects, #skills, #contact
+  -->
+    <header class ="site-header">
+        <div class ="header-content">
+        <h1>Vicky Danko</h1>
+        <p>Software Engineer </p>
+        <nav class ="main-nav">
+            <ul>
+            <a href="#about">About</a>
+            <a href="#projects">Projects</a>
+            <a href="#skills">Skills</a>
+            <a href="#contact">Contact</a>
+            </ul>
+        </nav>
+        </div>
+    </header>
+
+
+  <main>
+    <div class = "content-wrapper">
+
+    <!-- TODO: Add an "About Me" <section id="about"> with:
+         - An <h2> heading
+         - A short bio paragraph
+         - An <img> with a proper alt attribute
+    -->
+    <section id="about">
+        <h2>About Me</h2>
+        <p>Hi, I'm Vicky! Welcome to my page. Please see my projects and skills.</p>
+        <img src="images/vicky.jpg" alt="Vicky Danko smiling at the camera" />
+    </section>
+
+
+    <!-- TODO: Add a "Projects" <section id="projects"> with:
+         - An <h2> heading
+         - Three <article> elements, one per completed module.
+           Each article should have: <h3> title, module label, description, <img>
+    -->
+    <section id="projects">
+        <h2>Projects</h2>
+        <div class = "project-grid">
+        <article class ="project-card">
+            <h3>Student Grade Tracker</h3>
+            <p class="project-module">Grade Tracker for Students</p>
+            <p>command-line Python application that reads student data from CSV files, calculates averages, and generates summary reports.</p>
+            <img src="students.png" alt="students looking at a computer for grades"/>
+        </article>
+
+        <article class ="project-card">
+            <h3>Data Processing Pipeline</h3>
+            <p class="project-module">Module 2: Advanced Python and Data Handling</p>
+            <p>An OOP-based data pipeline that cleans messy datasets using pandas, performs analysis with grouping and aggregation, and generates visualizations with matplotlib.</p>
+            <img src="data_handling.png" alt="Data Handling graphic"/>
+        </article>
+        <article class ="project-card">
+            <h3>AI Ready Task Manager</h3>
+            <p class="project-module">Task Manager to keep you organized</p>
+            <p>A FastAPI backend with JWT authentication, full CRUD operations, SQLAlchemy database integration, and automated testing with pytest.</p>
+            <img src="checklist.png" alt="check list with check boxes"/>
+        </article>
+        </div>
+    </section>
+
+
+    <!-- TODO: Add a "Skills" <section id="skills"> with:
+         - An <h2> heading
+         - A <ul> listing at least 5 skills
+    -->
+    <section id="skills">
+        <h2>Skills</h2>
+        <ul>
+            <li>Python (pandas, matplotlib, requests) </li>
+            <li>SQL & SQLAlchemy ORM</li>
+            <li>FastAPI & RestAPI Design</li>
+            <li>Git &Github</li>
+            <li>Testing with pytest</li>
+        </ul>
+
+    </section>
+        
+
+
+    <!-- TODO: Add a "Contact" <section id="contact"> with:
+         - An <h2> heading
+         - Your (fake) email address as a mailto: link
+         - Links to GitHub and LinkedIn profiles
+    -->
+    <section id="contact">
+        <h2>Contact</h2>
+        <p>Email: <a href="mailto:vicky@example.com">vicky@example.com</a></p>
+        <p>GitHub: <a href="https://github.com/vickydanko06" target="_blank">github.com/vickydanko06</a></p>
+        <p>LinkedIn: <a href="https://www.linkedin.com/in/victoria-danko-177b86a8" target="_blank">linkedin.com/in/victoria-danko-177b86a8</a></p>
+    </section>
+    </div>
+  </main>
+
+  <!-- TODO: Add a <footer> with a copyright line -->
+    <footer class="site-footer">
+        <p>&copy; 2026 Vicky Danko</p>
+    </footer>
+
+</body>
+</html>
