@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!--
+  L4 — Interactive Flashcard App  (STARTER)
+  ===========================================
+  Your goal: build a working flashcard app in a single HTML file.
+
+  Features to implement:
+    1. Array of 5 Q&A pairs (topics: HTTP methods, CSS selectors, DOM,
+       status codes, async/await)
+    2. Display the current question
+    3. "Show Answer" button — toggle answer visibility
+    4. "Next" button — advance to the next card, hide the answer
+    5. Progress indicator: "Card X of 5"
+    6. Loop back to Card 1 after the last card
+
+  Key concepts to use:
+    • let vs const    — use const for things that don't change, let for state
+    • querySelector() — find a DOM element by CSS selector
+    • addEventListener("click", fn) — respond to button clicks
+    • textContent     — read or write the text inside an element
+    • style.display   — "none" to hide, "block" to show
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Dev Flashcards</title>
+  <style>
+    /* TODO: Add basic styling.
+       Suggested rules:
+         body     — dark background, centered content, flexbox column
+         .card    — rounded box, border, padding, max-width
+         .answer  — different background colour, start with display: none
+         button   — coloured background, padding, cursor: pointer
+    */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background-color: rgb(1, 1, 60);
+      padding: 40px 20px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* TODO: set background colour, text colour, center content */
+    }
+
+    .card {
+      /* TODO: style the card container */
+      border-radius: 8px;
+      border:2px solid black;
+      padding: 24px;
+      max-width: 400px;
+      background-color: white;
+      color:black;
+    }
+
+    .answer {
+      /* IMPORTANT: the answer must start hidden */
+      display: none;
+      background-color: cadetblue;
+      padding: 24px;
+      width:100%;
+      /* TODO: add background colour and padding */
+    }
+
+    button {
+      /* TODO: style buttons */
+      background-color: lightgray;
+      padding: 5px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Web Dev Flashcards</h1>
+
+  <div class="card">
+    <p id="progress">Card 1 of 5</p>
+    <p id="question">Loading…</p>
+    <div class="answer" id="answer">Loading…</div>
+    <div>
+      <button id="show-btn">Show Answer</button>
+      <button id="next-btn">Next →</button>
+    </div>
+  </div>
+
+  <script>
+    // ── Step 1: Define your flashcard data ──────────────────────────────
+    // Use const because this array won't be reassigned.
+    // Each object has a "question" and an "answer" property.
+    const cards = [
+      // TODO: Add 5 flashcard objects
+      // Example format:
+      // { question: "What are the HTTP methods?", answer: "GET POST PUT DELETE" },
+      { question: "What does HTTP stand for?", answer: "HyperText Transfer Protocol" },
+      { question: "What status code means ‘Not Found’?", answer: "404" },
+      { question: "What does CSS stand for?", answer: "Cascading Style Sheet" },
+      { question: "What does DOM stand for?", answer: "Document Object Model" },
+      { question: "What do async and await do in JavaScript?", answer: "They help write asynchronous code using Promises" },
+    ];
+
+    // ── Step 2: State variables ─────────────────────────────────────────
+    // Use let because these values will change.
+    let currentIndex = 0;       // TODO: which card is active?
+    let answerVisible = false;  // TODO: is the answer shown?
+
+
+
+    // ── Step 3: Get references to DOM elements ──────────────────────────
+    // querySelector(selector) returns the first element matching the selector.
+    // '#id' selects by ID, '.class' by class, 'tag' by element type.
+    const progressEl = document.querySelector('#progress');
+    const questionEl = document.querySelector('#question');
+    const answerEl   = document.querySelector('#answer');
+    const showBtn    = document.querySelector('#show-btn');
+    const nextBtn    = document.querySelector('#next-btn');
+
+    // ── Step 4: renderCard() — update the UI ───────────────────────────
+    function renderCard() {
+      // TODO: Get the current card from cards[currentIndex]
+      const card = cards[currentIndex];
+
+      // TODO: Update progressEl.textContent to "Card X of 5"
+      progressEl.textContent =`Card ${currentIndex+1} of ${cards.length}`;
+
+      // TODO: Update questionEl.textContent with the card's question
+        questionEl.textContent = card.question;
+
+      // TODO: Update answerEl.textContent with the card's answer
+        answerEl.textContent = card.answer;
+
+      // TODO: Show or hide the answer using answerEl.style.display
+      //       "none" = hidden, "block" = visible
+        if (answerVisible){
+            answerEl.style.display = "block"}
+            else{
+                answerEl.style.display = "none"
+            }
+
+
+      // TODO: Update showBtn.textContent based on whether answer is visible
+        if (answerVisible) {
+  showBtn.textContent = "Hide Answer";
+} else {
+  showBtn.textContent = "Show Answer";
+}
+    }
+    
+
+    // ── Step 5: Event listeners ─────────────────────────────────────────
+    // addEventListener(eventName, callbackFunction) runs the function
+    // every time that event fires on the element.
+
+    // "Show Answer" button
+    showBtn.addEventListener("click", function () {
+      // TODO: Toggle answerVisible (hint: answerVisible = !answerVisible)
+      // TODO: Call renderCard() to update the UI
+      answerVisible = !answerVisible;
+      renderCard();
+    });
+
+    // "Next" button
+    nextBtn.addEventListener("click", function () {
+      // TODO: Advance currentIndex by 1
+      //       Use modulo to wrap: (currentIndex + 1) % cards.length
+      //       Reset answerVisible to false
+      // TODO: Call renderCard()
+      currentIndex = (currentIndex + 1) % cards.length;
+    answerVisible = false;
+    renderCard();
+    });
+
+    // ── Step 6: Initial render ──────────────────────────────────────────
+    // Call renderCard() once here to display the first card on page load.
+    // TODO: call renderCard()
+    renderCard();
+  </script>
+
+</body>
+</html>
