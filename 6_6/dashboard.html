@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<!--
+  L6 — Mini Dashboard: HTML Frontend  (STARTER)
+  ================================================
+  Requires the FastAPI backend running at http://localhost:8000
+  Start it with: uvicorn mini_api:app --reload --port 8000
+
+  Your goal: build a task management dashboard that communicates with the API.
+
+  Features to implement:
+    1. Stats bar — total / done / pending task counts
+    2. Task list — loaded via fetch(GET /tasks) on page load
+    3. Add task form — POST /tasks with a JSON body
+    4. "Mark Done" button per task — PATCH /tasks/{id}/complete
+    5. Refresh button — re-fetch the task list
+    6. Last-fetched timestamp
+    7. Error message if the API is unreachable
+
+  Key patterns:
+    • fetch(url, { method, headers, body }) — for POST/PATCH requests
+    • JSON.stringify(obj) — convert a JS object to a JSON string for the body
+    • Always include "Content-Type": "application/json" on POST/PATCH
+    • After any mutation (add, complete), call fetchTasks() to refresh the UI
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Dashboard</title>
+  <style>
+    /* TODO: Add styles for stats bar, task list items, buttons, and error messages */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; padding: 2rem 1rem; color: #1e293b;line-height: 1.5;}
+    h1 { text-align: center; margin-bottom: 1.5rem; font-size:2.2rem; color: #1e3a8a}
+    .panel { max-width: 600px; margin: 0 auto; }
+    button { padding: 0.6rem 1rem; border: none; border-radius: 6px; cursor: pointer; }
+    #stats{max-width: 650px;margin: 0 auto 25px;display:grid; grid-template-columns: repeat(3,1fr);gap:15px;}
+    #stats p {background: white;padding: 20px 12px;border-radius: 14px;text-align: center;box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);color: #64748b;font-size: 0.95rem;}
+    #stats span{display:block;font-size:2rem;font-weight:700;color:#2563eb;margin-top:5px;}
+    #new-task-input {flex: 1;min-width: 0; padding: 13px 15px;border: 1px solid #cbd5e1;border-radius: 9px;font-size: 1rem; background: white;outline: none;}
+
+    #new-task-input:focus {border-color: #3b82f6;box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);}
+    /* Buttons */
+button {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.2s;
+}
+
+button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+button:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+/* Refresh button */
+#refresh-btn {
+  background: #e2e8f0;
+  color: #334155;
+  margin-bottom: 12px;
+}
+
+#refresh-btn:hover {
+  background: #cbd5e1;
+}
+
+/* Timestamp and status */
+#timestamp {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+#status {
+  color: #475569;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+#error-msg {
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* Task list */
+#task-list {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+#task-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  background: white;
+  padding: 17px 18px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
+  border: 1px solid #e8edf4;
+  overflow-wrap: anywhere;
+}
+
+#task-list li span {
+  flex: 1;
+}
+
+/* Smaller screens */
+@media (max-width: 480px) {
+  body {
+    padding: 25px 12px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  #stats {
+    gap: 8px;
+  }
+
+  #stats p {
+    padding: 14px 5px;
+    font-size: 0.82rem;
+  }
+
+  #stats span {
+    font-size: 1.6rem;
+  }
+
+  #add-form {
+    flex-wrap: wrap;
+  }
+
+  #new-task-input {
+    width: 100%;
+  }
+
+  #task-list li {
+    padding: 13px;
+  }
+
+  #task-list li button {
+    padding: 9px 10px;
+  }
+}
+  </style>
+</head>
+<body>
+
+  <h1>Task Dashboard</h1>
+
+  <!-- Stats bar: show total, done, pending counts -->
+  <div id="stats">
+    <p>Total: <span id="stat-total">–</span></p>
+    <p>Done: <span id="stat-done">–</span></p>
+    <p>Pending: <span id="stat-pending">–</span></p>
+  </div>
+
+  <div class="panel">
+    <!-- Add task form -->
+    <form id="add-form">
+      <input type="text" id="new-task-input" placeholder="Add a new task…" required />
+      <button type="submit">Add Task</button>
+    </form>
+
+    <!-- Refresh button and timestamp -->
+    <button id="refresh-btn">↻ Refresh</button>
+    <p id="timestamp"></p>
+
+    <!-- Status / error messages -->
+    <div id="status">Loading…</div>
+    <div id="error-msg" style="color: red;"></div>
+
+    <!-- Task list -->
+    <ul id="task-list"></ul>
+  </div>
+
+  <script>
+    const API = "http://localhost:8000";
+
+    // ── DOM references ─────────────────────────────────────────────────
+    const taskList     = document.querySelector('#task-list');
+    const statusDiv    = document.querySelector('#status');
+    const errorMsg     = document.querySelector('#error-msg');
+    const timestamp    = document.querySelector('#timestamp');
+    const addForm      = document.querySelector('#add-form');
+    const newTaskInput = document.querySelector('#new-task-input');
+    const refreshBtn   = document.querySelector('#refresh-btn');
+
+    // Stats elements
+    const statTotal    = document.querySelector('#stat-total');
+    const statDone     = document.querySelector('#stat-done');
+    const statPending  = document.querySelector('#stat-pending');
+
+    // ── fetchTasks() ───────────────────────────────────────────────────
+    // TODO: Implement this async function
+    // Steps:
+    //   1. Show a loading message in statusDiv
+    //   2. Fetch GET /tasks
+    //   3. Check response.ok — throw if not
+    //   4. Parse JSON → tasks array
+    //   5. Call renderTasks(tasks)
+    //   6. Call updateStats(tasks)
+    //   7. Update the timestamp
+    //   8. In catch: show error in errorMsg (hint: "Is the server running?")
+    async function fetchTasks() {
+      statusDiv.textContent = "Loading tasks...";
+  errorMsg.textContent = "";
+
+  try {
+    const response = await fetch(`${API}/tasks`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+
+    const tasks = await response.json();
+
+    console.log("Tasks received:", tasks);
+
+    renderTasks(tasks);
+    updateStats(tasks);
+
+    timestamp.textContent =
+      "Last fetched: " + new Date().toLocaleTimeString();
+
+    statusDiv.textContent = tasks.length
+      ? "Tasks loaded successfully."
+      : "No tasks yet.";
+
+    errorMsg.textContent = "";
+  } catch (error) {
+    console.error("fetchTasks failed:", error);
+
+    statusDiv.textContent = "Unable to load tasks.";
+    errorMsg.textContent =
+      "Could not load tasks: " + error.message;
+  }
+}
+
+    // ── renderTasks(tasks) ──────────────────────────────────────────────
+    // TODO: Clear task-list, build one <li> per task
+    // For pending tasks: show title + "Mark Done" button
+    // For done tasks: show title with strikethrough
+    // Attach click listener on "Mark Done" to call completeTask(task.id)
+    function renderTasks(tasks) {
+       taskList.replaceChildren();
+
+  tasks.forEach(function (task) {
+    const li = document.createElement("li");
+    const title = document.createElement("span");
+
+    title.textContent = task.title;
+
+    if (task.done) {
+      title.style.textDecoration = "line-through";
+    }
+
+    li.appendChild(title);
+
+    if (!task.done) {
+      const button = document.createElement("button");
+      button.textContent = "Mark Done";
+
+      button.addEventListener("click", function () {
+        completeTask(task.id);
+      });
+
+      li.appendChild(button);
+    }
+
+    taskList.appendChild(li);
+  });
+    }
+
+    // ── updateStats(tasks) ─────────────────────────────────────────────
+    // TODO: Count done vs pending; update statTotal, statDone, statPending
+    function updateStats(tasks) {
+      const total = tasks.length;
+
+  const done = tasks.filter(function (task) {
+    return task.done;
+  }).length;
+
+  const pending = total - done;
+
+  statTotal.textContent = total;
+  statDone.textContent = done;
+  statPending.textContent = pending;
+    }
+
+    // ── completeTask(id) ───────────────────────────────────────────────
+    // TODO: PATCH /tasks/{id}/complete then call fetchTasks()
+    // Remember: fetch(url, { method: "PATCH" })
+    async function completeTask(id) {
+      errorMsg.textContent = "";
+
+  try {
+    const response = await fetch(
+      `${API}/tasks/${id}/complete`,
+      { method: "PATCH" }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to complete task");
+    }
+
+    await fetchTasks();
+  } catch (error) {
+    errorMsg.textContent = "Could not mark task as done.";
+  }
+    }
+
+    // ── Add task form ──────────────────────────────────────────────────
+    // TODO: Prevent default, POST the new title as JSON, then fetchTasks()
+    // Remember:
+    //   method: "POST"
+    //   headers: { "Content-Type": "application/json" }
+    //   body: JSON.stringify({ title: inputValue })
+    addForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const title = newTaskInput.value.trim();
+
+  if (!title) return;
+
+  errorMsg.textContent = "";
+
+  try {
+    const response = await fetch(`${API}/tasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ title: title })
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to add task");
+    }
+
+    newTaskInput.value = "";
+    await fetchTasks();
+  } catch (error) {
+    errorMsg.textContent = "Could not add task.";
+  }
+    });
+
+    // ── Refresh button ─────────────────────────────────────────────────
+    refreshBtn.addEventListener("click", fetchTasks);
+
+    // ── Initial load ───────────────────────────────────────────────────
+    fetchTasks();
+  </script>
+
+</body>
+</html>
